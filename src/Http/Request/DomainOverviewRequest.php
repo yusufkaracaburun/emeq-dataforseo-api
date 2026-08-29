@@ -17,8 +17,7 @@ class DomainOverviewRequest extends Request implements HasBody
 
     public function __construct(
         private readonly string $domain,
-        private readonly int $locationCode = 2826,
-        private readonly string $languageCode = 'nl',
+        private readonly string $locationName = 'Netherlands',
     ) {}
 
     public function resolveEndpoint(): string
@@ -31,8 +30,7 @@ class DomainOverviewRequest extends Request implements HasBody
         return [
             [
                 'target' => $this->domain,
-                'location_code' => $this->locationCode,
-                'language_code' => $this->languageCode,
+                'location_name' => $this->locationName,
             ],
         ];
     }
