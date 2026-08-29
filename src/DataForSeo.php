@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace Emeq\DataForSeoApi;
 
 use Emeq\DataForSeoApi\Contracts\DataForSeoCredentialResolver;
+use Emeq\DataForSeoApi\Data\BacklinksSummary;
 use Emeq\DataForSeoApi\Data\DomainOverview;
 use Emeq\DataForSeoApi\Exceptions\DataForSeoTaskException;
 use Emeq\DataForSeoApi\Http\DataForSeoConnector;
+use Emeq\DataForSeoApi\Http\Request\BacklinksSummaryRequest;
 use Emeq\DataForSeoApi\Http\Request\DomainOverviewRequest;
 
 final class DataForSeo
@@ -53,5 +55,38 @@ final class DataForSeo
         $overview = DomainOverview::fromTaskResult($result);
 
         return $overview->raw;
+    }
+
+    /**
+     * @param  array<string, mixed>  $extra
+     * @return array<string, mixed>
+     */
+    public function backlinksSummary(string $target, array $extra = []): array
+    {
+        $request = new BacklinksSummaryRequest($target, $extra);
+        $response = $this->connector()->send($request);
+
+        if ($response->failed()) {
+            $response->throw();
+        }
+
+        $data = $response->json();
+
+        /** @var array<string, mixed>|null $task */
+        $task = $data['tasks'][0] ?? null;
+        $statusCode = $task['status_code'] ?? null;
+
+        if (($data['tasks_error'] ?? 0) > 0 || $statusCode !== 20000) {
+            throw new DataForSeoTaskException(
+                statusCode: (int) ($statusCode ?? 0),
+                statusMessage: (string) ($task['status_message'] ?? 'Unknown DataForSEO task error'),
+            );
+        }
+
+        $result = $task['result'][0] ?? [];
+
+        $summary = BacklinksSummary::fromTaskResult($result);
+
+        return $summary->raw;
     }
 }
