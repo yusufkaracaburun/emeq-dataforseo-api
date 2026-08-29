@@ -25,9 +25,9 @@ final class DataForSeo
     /**
      * @return array<string, mixed>
      */
-    public function domainOverview(string $domain): array
+    public function domainOverview(string $domain, int $locationCode = 2826, string $languageCode = "nl"): array
     {
-        $request = new DomainOverviewRequest($domain);
+        $request = new DomainOverviewRequest($domain, $locationCode, $languageCode);
         $response = $this->connector()->send($request);
 
         if ($response->failed()) {
