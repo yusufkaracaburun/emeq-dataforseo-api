@@ -14,6 +14,7 @@ use Emeq\DataForSeoApi\Http\Request\DomainOverviewRequest;
 use Emeq\DataForSeoApi\Http\Request\RelatedKeywordsRequest;
 use Emeq\DataForSeoApi\Http\Request\SearchVolumeRequest;
 use Emeq\DataForSeoApi\Http\Request\SerpOrganicRequest;
+use Emeq\DataForSeoApi\Http\Request\UserDataRequest;
 use Saloon\Http\Request;
 
 final class DataForSeo
@@ -76,6 +77,16 @@ final class DataForSeo
     public function relatedKeywords(string $keyword, array $options = []): array
     {
         return $this->firstTask(new RelatedKeywordsRequest($keyword, $options))['result'][0] ?? [];
+    }
+
+    /**
+     * Free call: login, rates, limits and money (balance) of the account.
+     *
+     * @return array<string, mixed>
+     */
+    public function userData(): array
+    {
+        return $this->firstTask(new UserDataRequest)['result'][0] ?? [];
     }
 
     /**
