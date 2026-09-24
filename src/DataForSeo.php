@@ -11,6 +11,10 @@ use Emeq\DataForSeoApi\Exceptions\DataForSeoTaskException;
 use Emeq\DataForSeoApi\Http\DataForSeoConnector;
 use Emeq\DataForSeoApi\Http\Request\BacklinksSummaryRequest;
 use Emeq\DataForSeoApi\Http\Request\DomainOverviewRequest;
+use Emeq\DataForSeoApi\Http\Request\RelatedKeywordsRequest;
+use Emeq\DataForSeoApi\Http\Request\SearchVolumeRequest;
+use Emeq\DataForSeoApi\Http\Request\SerpOrganicRequest;
+use Saloon\Http\Request;
 
 final class DataForSeo
 {
@@ -30,31 +34,9 @@ final class DataForSeo
      */
     public function domainOverview(string $domain, string $locationName = 'Netherlands'): array
     {
-        $request = new DomainOverviewRequest($domain, $locationName);
-        $response = $this->connector()->send($request);
+        $task = $this->firstTask(new DomainOverviewRequest($domain, $locationName));
 
-        if ($response->failed()) {
-            $response->throw();
-        }
-
-        $data = $response->json();
-
-        /** @var array<string, mixed>|null $task */
-        $task = $data['tasks'][0] ?? null;
-        $statusCode = $task['status_code'] ?? null;
-
-        if (($data['tasks_error'] ?? 0) > 0 || $statusCode !== 20000) {
-            throw new DataForSeoTaskException(
-                statusCode: (int) ($statusCode ?? 0),
-                statusMessage: (string) ($task['status_message'] ?? 'Unknown DataForSEO task error'),
-            );
-        }
-
-        $result = $task['result'][0] ?? [];
-
-        $overview = DomainOverview::fromTaskResult($result);
-
-        return $overview->raw;
+        return DomainOverview::fromTaskResult($task['result'][0] ?? [])->raw;
     }
 
     /**
@@ -63,7 +45,46 @@ final class DataForSeo
      */
     public function backlinksSummary(string $target, array $extra = []): array
     {
-        $request = new BacklinksSummaryRequest($target, $extra);
+        $task = $this->firstTask(new BacklinksSummaryRequest($target, $extra));
+
+        return BacklinksSummary::fromTaskResult($task['result'][0] ?? [])->raw;
+    }
+
+    /**
+     * @param  list<string>  $keywords
+     * @param  array<string, mixed>  $options
+     * @return list<array<string, mixed>>
+     */
+    public function searchVolume(array $keywords, array $options = []): array
+    {
+        return $this->firstTask(new SearchVolumeRequest($keywords, $options))['result'] ?? [];
+    }
+
+    /**
+     * @param  array<string, mixed>  $options
+     * @return array<string, mixed>
+     */
+    public function serpOrganic(string $keyword, array $options = []): array
+    {
+        return $this->firstTask(new SerpOrganicRequest($keyword, $options))['result'][0] ?? [];
+    }
+
+    /**
+     * @param  array<string, mixed>  $options
+     * @return array<string, mixed>
+     */
+    public function relatedKeywords(string $keyword, array $options = []): array
+    {
+        return $this->firstTask(new RelatedKeywordsRequest($keyword, $options))['result'][0] ?? [];
+    }
+
+    /**
+     * Task-level failures arrive as HTTP 200 with tasks[0].status_code != 20000.
+     *
+     * @return array<string, mixed>
+     */
+    private function firstTask(Request $request): array
+    {
         $response = $this->connector()->send($request);
 
         if ($response->failed()) {
@@ -83,10 +104,6 @@ final class DataForSeo
             );
         }
 
-        $result = $task['result'][0] ?? [];
-
-        $summary = BacklinksSummary::fromTaskResult($result);
-
-        return $summary->raw;
+        return $task;
     }
 }

@@ -64,8 +64,17 @@ app(\Emeq\DataForSeoApi\DataForSeo::class)->domainOverview(
 | Methode | DataForSEO-endpoint | Doel |
 |---|---|---|
 | `domainOverview()` | `POST /v3/dataforseo_labs/google/domain_rank_overview/live` | Organisch verkeer, keywords, backlinks-samenvatting per domein |
+| `backlinksSummary()` | `POST /v3/backlinks/summary/live` | Backlinks en verwijzende domeinen per target |
+| `searchVolume()` | `POST /v3/keywords_data/google_ads/search_volume/live` | Zoekvolume per keyword (max 1000 per call). Geeft `result` terug, één rij per keyword |
+| `serpOrganic()` | `POST /v3/serp/google/organic/live/advanced` | Organische SERP met features (PAA, AI Overview, local pack) |
+| `relatedKeywords()` | `POST /v3/dataforseo_labs/google/related_keywords/live` | Gerelateerde zoektermen met volume |
 
-Meer endpoints (keyword research, backlinks, rank tracking, site audit) volgen als losse
+De drie keyword-/SERP-methodes gebruiken standaard `location_code` 2528 en `language_code`
+`nl`. De tweede parameter `$options` wordt in de task gemerged en overschrijft die defaults
+(bijvoorbeeld `['depth' => 20]` bij `serpOrganic()`). Google Ads Live staat maximaal
+12 requests per minuut per account toe.
+
+Meer endpoints (rank tracking, site audit) volgen als losse
 methodes op `DataForSeo`/`DataForSeoConnector` — zie
 [emeq-hub#83](https://github.com/yusufkaracaburun/emeq-hub/issues/83) voor de context
 achter dit package, en de DataForSEO-labs-documentatie voor de volledige API-surface.
